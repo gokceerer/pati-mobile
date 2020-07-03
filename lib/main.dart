@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -30,6 +31,39 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String percentage = '';
+  Timer timer;
+  @override
+  void initState(){
+    super.initState();
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => incrementTimer());
+  }
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+  Future<String> getFoodPercentage() async {
+    final response = await http.get('http://192.168.1.24/weight');
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      print('pati server could not respond');
+    }
+  }
+  String removeTrailing(String pattern, String from) {
+    int i = from.length;
+    while (from.startsWith(pattern, i - pattern.length)) i -= pattern.length;
+    return from.substring(0, i);
+  }
+  void incrementTimer() async {
+    var response = await getFoodPercentage();
+    response = removeTrailing("-", response);
+    setState(() {
+      percentage = response.trim();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -249,11 +283,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 24, left: 24, top: 30, bottom: 50),
                                 child: Text(
-                                  "80%",
+                                  '$percentage' + '%',
                                   style: TextStyle(
                                     fontFamily: 'NunitoSans',
                                     color: Colors.black,
-                                    fontSize: 70,
+                                    fontSize: 60,
                                     fontWeight: FontWeight.w700,
                                     fontStyle: FontStyle.normal,
                                   ),
@@ -294,7 +328,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                       child: GestureDetector(
                         onTap: () {
-                          http.get("http://192.168.1.24/ledon");
+                          http.get("http://192.168.1.24/open");
                         },
                         child: new Container(
                           height: 63,
