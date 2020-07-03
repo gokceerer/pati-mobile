@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState(){
     super.initState();
-    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => incrementTimer());
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => checkForFoodPercentage());
   }
   @override
   void dispose() {
@@ -52,16 +52,19 @@ class _MyHomePageState extends State<MyHomePage> {
       print('pati server could not respond');
     }
   }
-  String removeTrailing(String pattern, String from) {
-    int i = from.length;
-    while (from.startsWith(pattern, i - pattern.length)) i -= pattern.length;
-    return from.substring(0, i);
+  String removeLeadingZerosFromString(String s) {
+    for (var i = 0; i < s.length; i++) {
+      if (s[0] == '0' && s.length > 1) {
+        s = s.substring(1);
+      }
+    }
+    return s;
   }
-  void incrementTimer() async {
+  void checkForFoodPercentage() async {
     var response = await getFoodPercentage();
-    response = removeTrailing("-", response);
+    response = removeLeadingZerosFromString(response);
     setState(() {
-      percentage = response.trim();
+      percentage = response;
     });
   }
   @override
